@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Donor Registration</title>
+
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; padding: 0 15px; }
+        h1 { text-align: center; color: darkred; }
+        form { border: 1px solid #ccc; padding: 20px; }
+        .group { margin-bottom: 12px; }
+
+        label { display: inline-block; width: 140px; }
+        label.inline { width: auto; }
+
+        input[type="text"], input[type="number"], input[type="password"], select {
+            padding: 6px;
+            width: 200px;
+        }
+
+        .error { display: block; color: red; font-size: 13px; margin-left: 145px; }
+
+        #count { text-align: center; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #999; padding: 8px; text-align: left; }
+        th { background: #f0f0f0; }
+    </style>
+</head>
+
+<body>
+
+    <h1>Blood Donor Registration</h1>
+
+    <form id="regForm" novalidate onsubmit="validateForm(event)">
+
+        <div class="group">
+            <label for="fname">Full Name:</label>
+            <input type="text" id="fname">
+            <span class="error" id="err-fname"></span>
+        </div>
+
+        <div class="group">
+            <label for="sid">AIUB ID:</label>
+            <input type="text" id="sid">
+            <span class="error" id="err-sid"></span>
+        </div>
+
+        <div class="group">
+            <label for="phone">Mobile:</label>
+            <input type="text" id="phone">
+            <span class="error" id="err-phone"></span>
+        </div>
+
+        <div class="group">
+            <label for="age">Age:</label>
+            <input type="number" id="age">
+            <span class="error" id="err-age"></span>
+        </div>
+
+        <div class="group">
+            <label for="bgroup">Blood Group:</label>
+            <select id="bgroup">
+                <option value="">Select blood group</option>
+                <option value="A+">A+</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B-">B-</option>
+                <option value="O+">O+</option>
+                <option value="O-">O-</option>
+                <option value="AB+">AB+</option>
+                <option value="AB-">AB-</option>
+            </select>
+            <span class="error" id="err-bgroup"></span>
+        </div>
+
+        <div class="group">
+            <label>Donated before?</label>
+            <input type="radio" id="donated-yes" name="donated" value="Yes">
+            <label for="donated-yes" class="inline">Yes</label>
+            <input type="radio" id="donated-no" name="donated" value="No">
+            <label for="donated-no" class="inline">No</label>
+            <span class="error" id="err-donated"></span>
+        </div>
+
+        <div class="group">
+            <input type="checkbox" id="agree">
+            <label for="agree" class="inline">I am healthy and willing to donate</label>
+            <span class="error" id="err-agree"></span>
+        </div>
+
+        <div class="group">
+            <label for="pass">Password:</label>
+            <input type="password" id="pass">
+            <span class="error" id="err-pass"></span>
+        </div>
+
+        <div class="group">
+            <label for="pass2">Confirm Password:</label>
+            <input type="password" id="pass2">
+            <span class="error" id="err-pass2"></span>
+        </div>
+
+        <button type="submit">Register Donor</button>
+    </form>
+
+    <p id="count">Total donors: 0</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>ID</th>
+                <th>Blood Group</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="donorBody"></tbody>
+    </table>
+
+<script>
+    let isValid = true;
+
+    function showError(fieldId, message) {
+        document.getElementById("err-" + fieldId).textContent = message;
+        isValid = false;
+    }
+
+    function clearErrors() {
+        const errors = document.querySelectorAll(".error");
+        for (let i = 0; i < errors.length; i++) {
+            errors[i].textContent = "";
+        }
+    }
+
+    function validateForm(event) {
+        event.preventDefault();
+
+        const name = document.getElementById("fname").value.trim();
+        const id = document.getElementById("sid").value.trim();
+        const phone = document.getElementById("phone").value.trim();
+        const age = Number(document.getElementById("age").value);
+        const group = document.getElementById("bgroup").value;
+        const donated = document.querySelector('input[name="donated"]:checked');
+        const agree = document.getElementById("agree").checked;
+        const password = document.getElementById("pass").value;
+        const confirmPassword = document.getElementById("pass2").value;
+
+        clearErrors();
+        isValid = true;
+
+        if (name.length < 3) {
+            showError("fname", "Name must have at least 3 characters");
+        }
+
+        if (!/^[0-9]{2}-[0-9]{5}-[0-9]$/.test(id)) {
+            showError("sid", "ID must be in format 22-12345-1");
+        }
+
+        if (!/^[0-9]{11}$/.test(phone)) {
+            showError("phone", "Mobile must be exactly 11 digits");
+        }
+
+        if (age < 18 || age > 60) {
+            showError("age", "Age must be between 18 and 60");
+        }
+
+        if (group === "") {
+            showError("bgroup", "Select a blood group");
+        }
+
+        if (donated === null) {
+            showError("donated", "Choose Yes or No");
+        }
+
+        if (agree === false) {
+            showError("agree", "You must tick the box");
+        }
+
+        if (password.length < 6) {
+            showError("pass", "Password must have at least 6 characters");
+        }
+
+        if (confirmPassword === "") {
+            showError("pass2", "Confirm Password is required");
+        } else if (confirmPassword !== password) {
+            showError("pass2", "Passwords do not match");
+        }
+
+        if (isValid) {
+            addDonor(name, id, group);
+            document.getElementById("regForm").reset();
+        }
+    }
+
+    function addDonor(name, id, group) {
+        const row = document.getElementById("donorBody").insertRow();
+
+        row.insertCell().textContent = name;
+        row.insertCell().textContent = id;
+        row.insertCell().textContent = group;
+        row.insertCell().innerHTML = '<button type="button" onclick="removeDonor(this)">Remove</button>';
+
+        updateCount();
+    }
+
+    function removeDonor(button) {
+        button.parentElement.parentElement.remove();
+        updateCount();
+    }
+
+    function updateCount() {
+        const total = document.getElementById("donorBody").rows.length;
+        document.getElementById("count").textContent = "Total donors: " + total;
+    }
+</script>
+
+</body>
+</html>
